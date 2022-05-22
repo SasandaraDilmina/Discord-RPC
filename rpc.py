@@ -1,10 +1,3 @@
-# References:
-# * https://github.com/devsnek/discord-rpc/tree/master/src/transports/IPC.js
-# * https://github.com/devsnek/discord-rpc/tree/master/example/main.js
-# * https://github.com/discordapp/discord-rpc/tree/master/documentation/hard-mode.md
-# * https://github.com/discordapp/discord-rpc/tree/master/src
-# * https://discordapp.com/developers/docs/rich-presence/how-to#updating-presence-update-presence-payload-fields
-
 from abc import ABCMeta, abstractmethod
 import json
 import logging
@@ -29,15 +22,6 @@ class DiscordIpcError(Exception):
 
 class DiscordIpcClient(metaclass=ABCMeta):
 
-    """Work with an open Discord instance via its JSON IPC for its rich presence API.
-
-    In a blocking way.
-    Classmethod `for_platform`
-    will resolve to one of WinDiscordIpcClient or UnixDiscordIpcClient,
-    depending on the current platform.
-    Supports context handler protocol.
-    """
-
     def __init__(self, client_id):
         self.client_id = client_id
         self._connect()
@@ -57,7 +41,6 @@ class DiscordIpcClient(metaclass=ABCMeta):
 
     def _do_handshake(self):
         ret_op, ret_data = self.send_recv({'v': 1, 'client_id': self.client_id}, op=OP_HANDSHAKE)
-        # {'cmd': 'DISPATCH', 'data': {'v': 1, 'config': {...}}, 'evt': 'READY', 'nonce': None}
         if ret_op == OP_FRAME and ret_data['cmd'] == 'DISPATCH' and ret_data['evt'] == 'READY':
             return
         else:
@@ -116,10 +99,6 @@ class DiscordIpcClient(metaclass=ABCMeta):
         self._write(data_bytes)
 
     def recv(self) -> (int, "JSON"):
-        """Receives a packet from discord.
-
-        Returns op code and payload.
-        """
         op, length = self._recv_header()
         payload = self._recv_exactly(length)
         data = json.loads(payload.decode('utf-8'))
@@ -127,7 +106,6 @@ class DiscordIpcClient(metaclass=ABCMeta):
         return op, data
 
     def set_activity(self, act):
-        # act
         data = {
             'cmd': 'SET_ACTIVITY',
             'args': {'pid': os.getpid(),
